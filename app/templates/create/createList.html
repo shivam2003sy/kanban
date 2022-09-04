@@ -1,0 +1,44 @@
+{% extends "layouts/base-home.html" %}
+{% block title %} CreateList {% endblock %}
+{% block content %}
+<section>
+    <div class="container d-flex flex-column">
+        <div class="row align-items-center justify-content-center min-vh-100">
+            <div class="col-md-6 col-lg-5 col-xl-5 py-6 py-md-0">
+                <div class="card shadow zindex-100 mb-0">
+                    <div class="card-body px-md-5 py-5">
+                        <div class="mb-2">
+                            <h6 class="h3">
+                         Create a New List 
+                            </h6>
+                        </div>
+                        <form method="post" action="/createlist" class="mt-2 mb-2 ">
+                            <div class="form-group">
+                                <label class="form-control-label">List Name</label>
+                                <div class="input-group">
+                                    <textarea class="form-control" id="textAreaExample1" rows="1" name="list_name" required></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group mb-0">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <label class="form-control-label">Description</label>
+                                    </div>
+                                </div>
+                                <div class="form-outline">
+                                    <textarea class="form-control" id="textAreaExample1" name="description" rows="4"></textarea>
+                                  </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" value="createlist" class="btn btn-block btn-primary">Create</button></div>
+                        </form>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

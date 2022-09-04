@@ -1,15 +1,14 @@
 # Python modules
-import os, logging 
-
+import datetime
 # Flask modules
 from flask  import render_template, request, url_for, redirect, send_from_directory
 from flask_login  import login_user, logout_user, current_user, login_required
 from werkzeug.exceptions import HTTPException, NotFound, abort
 from jinja2  import TemplateNotFound
-
+from flask_restful import Resource
 # App modules
-from app import app, lm, db, bc
-from app.models import User
+from app import app, lm, db, bc , api
+from app.models import User , List , Card
 from app.forms import LoginForm, RegisterForm
 
 # provide login manager with load_user callback
@@ -83,4 +82,96 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     else:
-       return  render_template('index.html')
+        log_id = current_user.get_id()
+        user = User.query.filter_by(id=log_id).first_or_404()
+        display_list = user.list
+        return  render_template('index.html',list=display_list )
+
+# Add a new list
+@app.route('/createlist',methods=['GET', 'POST']) 
+def createlist():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    else:
+        if request.method == 'GET':
+            return render_template('create/createList.html')
+        if request.method == 'POST':
+            log_id = current_user.get_id()
+            name = request.form.get('list_name')
+            description = request.form.get('description')
+            list_todo = List(name=name,user_id=log_id,description=description)
+            db.session.add(list_todo)
+            db.session.commit()
+            return redirect(url_for('index'))
+#  edit list titles
+@app.route('/createlist/<int:list_id>',methods=['GET', 'PUT'])
+def editlist(list_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    else:
+        if request.method == 'GET':
+            list_todo = List.query.filter_by(id=list_id).first_or_404()
+            return render_template('create/editList.html',list=list_todo)
+        if request.method == 'PUT':
+            name = request.form.get('list_name')
+            description = request.form.get('description')
+            list_todo = List.query.filter_by(id=list_id).first_or_404()
+            list_todo.name = name
+            list_todo.description = description
+            db.session.commit()
+            return redirect(url_for('index'))
+# Add a new card
+
+@app.route('/createcard',methods=['GET','POST'])
+def createcard():
+    log_id = current_user.get_id()
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    else:
+        if request.method =='GET':
+            user = User.query.filter_by(id=log_id).first_or_404()
+            list_item = user.list
+            return render_template('card/createcard.html' ,list_item=list_item)
+        if request.method == "POST":
+            list_get = request.form.get('list')
+            list_from_name= List.query.filter_by(user_id=log_id,name=list_get).first()
+            list_id = list_from_name.id
+            
+            title = request.form.get('title')
+            content = request.form.get('content')
+            # deadline = request.form.get('deadline')
+            deadline = datetime.datetime.strptime(request.form.get('deadline'), '%Y-%m-%d')
+            check = request.form.get("checkbox")
+            if check:
+                completed = True
+            else:
+                completed = False
+            # current_datetime = datetime.datetime.now()
+            created_time = datetime.datetime.now()
+            new_card = Card(Title=title,Content=content,deadline=deadline,list_id=list_id,Completed=completed,create_time=created_time)
+            db.session.add(new_card)
+            db.session.commit()
+            return redirect(url_for('index'))
+
+
+class HelloWorld(Resource):
+    def get(self):
+        return {'hello': 'world'}
+
+class List(Resource):
+    def get(self):
+        return {'hello': 'world'}
+    def post(self):
+        return {'hello': 'world'}
+    def put(self):
+        return {'hello': 'world'}
+    def delete(self):
+        return {'hello': 'world'}
+
+api.add_resource(List, '/list')
+api.add_resource(HelloWorld, '/hello')
+
+            
+
+
+        
