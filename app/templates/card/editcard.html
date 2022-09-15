@@ -1,0 +1,62 @@
+{% extends "layouts/base-home.html" %}
+{% block title %} Login {% endblock %}
+<!-- Specific Page CSS goes HERE  -->
+{% block content %}
+<!-- Main content -->
+<section>
+    <div class="container d-flex flex-column">
+        <div class="row align-items-center justify-content-center min-vh-100">
+            <div class="col-md-6 col-lg-5 col-xl-5 py-2 py-md-0">
+                <div class="card shadow zindex-100 mb-0">
+                    <div class="card-body px-md-5 py-5">
+                        <div class="mb-2">
+                            <h6 class="h3">
+                                Edit Card ......
+                            </h6>
+                        </div>
+                        <form method="post" action="/createcard/{{card.id}}" class="mt-1">
+                            <div>
+                                <label class="form-control-label">List Name</label>
+                                <select class="form-select" aria-label="Default select example" name="list">
+                                    {% for i in list_item %}
+                                    <option >{{i.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-control-label">Title</label>
+                                <div class="input-group">
+                                    <!-- <textarea class="form-control" id="textAreaExample1" rows="1" name="title"required></textarea> -->
+                                    <input type="text" class="form-control" id="validationDefault01" placeholder="Card Title" name="title" value={{card.Title}} required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-control-label">Content</label>
+                                <div class="input-group">
+                                    <textarea class="form-control" id="textAreaExample1" rows="2" name="content"
+                                        ></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label class="form-control-label mr-5">Deadline</label>
+                                    <input class="ml-5" type="date" id="deadline" name="deadline"></input>
+                            </div>
+                            <div class="input-group mb-3 , mt-2">
+                                <div class="input-group-prepend">
+                                    <label class="form-control-label mr-5">Mark Complete</label>
+                             <input type="checkbox" name="checkbox" aria-label="Checkbox for following text input">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit"class="btn btn-block btn-primary">Create Card</button>
+                </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    </div>
+    </div>
+</section>
+
+{% endblock content %}

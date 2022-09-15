@@ -1,5 +1,5 @@
 import os
-
+from flask_cors import CORS
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -10,7 +10,7 @@ from flask_restful import Api
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-
+CORS(app)
 app.config.from_object('app.config.Config')
 
 db = SQLAlchemy(app) # flask-sqlalchemy
@@ -28,4 +28,4 @@ def initialize_database():
     db.create_all()
 
 # Import routing, models and Start the App
-from app import views, models
+from app import views, models , apiendpoints
