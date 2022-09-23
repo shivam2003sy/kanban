@@ -1,5 +1,6 @@
 # Python modules
 import datetime
+from itertools import count
 # Flask modules
 from flask import render_template, request, url_for, redirect, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
@@ -10,17 +11,16 @@ from flask_restful import Resource
 from app import app, lm, db, bc, api
 from app.models import User, List, Card
 from app.forms import LoginForm, RegisterForm
-
 # provide login manager with load_user callback
 
+
+import matplotlib.pyplot as plt
 
 @lm.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Logout user
-
-
 @app.route('/logout')
 def logout():
     logout_user()
@@ -50,8 +50,8 @@ def register():
         if user or user_by_email:
             msg = 'Error: User exists!'
         else:
-            pw_hash = bc.generate_password_hash(password)
-            user = User(username, email, pw_hash)
+            # pw_hash = bc.generate_password_hash(password)
+            user = User(username, email,password)
             user.save()
             msg = 'User created, please <a href="' + \
                 url_for('login') + '">login</a>'
@@ -76,7 +76,10 @@ def login():
         # filter User out of database through username
         user = User.query.filter_by(user=username).first()
         if user:
-            if bc.check_password_hash(user.password, password):
+            # if bc.check_password_hash(user.password, password):
+            #     login_user(user)
+            #     return redirect(url_for('index'))
+            if user.password == password:
                 login_user(user)
                 return redirect(url_for('index'))
             else:
@@ -86,8 +89,6 @@ def login():
     return render_template('accounts/login.html', form=form, msg=msg)
 
 # App main route + generic routing
-
-
 @app.route('/')
 def index():
     if not current_user.is_authenticated:
@@ -98,10 +99,7 @@ def index():
         display_list = user.list
         CurrentDate = datetime.datetime.now()
         return render_template('index.html', list=display_list , CurrentDate=CurrentDate)
-
 # Add a new list
-
-
 @app.route('/createlist', methods=['GET', 'POST'])
 def createlist():
     if not current_user.is_authenticated:
@@ -146,8 +144,6 @@ def updatelist(list_id):
             finally:
                 db.session.commit()
                 return redirect(url_for('index'))
-
-
 # Delete a list
 @app.route('/createlist/<int:list_id>/delete', methods=['DELETE'])
 def deletelist(list_id):
@@ -238,8 +234,8 @@ def editcard(card_id):
                 else:
                     card.Completed = card.Completed
                 if name:
-                    list_from_name = List.query.filter_by(
-                        user_id=log_id, name=name).first()
+                    id_list=current_user.get_id()
+                    list_from_name = List.query.filter_by(user_id=id_list, name=name).first()
                     list_id = list_from_name.id
                     card.list_id = list_id
                 else:
@@ -248,10 +244,11 @@ def editcard(card_id):
                 db.session.commit()
                 return redirect(url_for('index'))
 # mark a card as completed
-@app.route('/card/<int:card_id>/completed', methods=["GET"])
+@app.route('/createcard/<int:card_id>/completed', methods=['Post'])
 def completed(card_id):
     card = Card.query.filter_by(id=card_id).first_or_404()
     card.Completed = True
+    card.complete_time =datetime.datetime.now()
     db.session.commit()
     return {'message': 'Card completed'}
 
@@ -262,3 +259,56 @@ def deletecard(card_id):
     db.session.delete(card)
     db.session.commit()
     return redirect(url_for('index'))
+
+# ALL task summary page 
+@app.route('/summary')
+def summary():
+    log_id = current_user.get_id()
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    else:
+        user = User.query.filter_by(id=log_id).first_or_404()
+        list_item = user.list
+        card_dict ={}
+        for list in list_item:
+            graphs_of_list(list.id)
+            card_dict[list.id] = []
+            completed =0
+            fail = 0
+            going = 0
+            total = 0
+            for cards in list.card:
+                total +=1
+                if cards.Completed == True:
+                    completed +=1
+                elif cards.Completed == False and cards.deadline < datetime.datetime.now():
+                    fail +=1
+                else:
+                    going +=1
+            card_dict[list.id].append(completed)
+            card_dict[list.id].append(fail)
+            card_dict[list.id].append(going)
+            card_dict[list.id].append(total)
+        return render_template('summary/main.html', list=list_item , card_dict=card_dict)
+
+
+
+def graphs_of_list(list_id):
+    cards = Card.query.filter_by(list_id=list_id).all()
+    x = []
+    y = []
+    for card in cards:
+        if card.Completed :
+            date_time = card.complete_time.strftime("%m/%d/%Y")
+            x.append(date_time)
+            i = Card.query.filter_by(complete_time=date_time ,Completed=True).all()
+            y.append(len(i))
+            app.logger.info(x)
+            app.logger.info(y)
+    # creating the bar plot
+    plt.bar(x,y, color ='maroon',
+            width = 0.4)
+    plt.xlabel("Dates")
+    plt.ylabel("No. of tasks completed")
+    plt.title("Tasks completed")
+    plt.show()
