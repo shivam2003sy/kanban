@@ -14,6 +14,8 @@ class User(UserMixin, db.Model):
     #     self.user       = user
     #     self.password   = password
     #     self.email      = email
+    def get_by_id(self, id):
+        return User.query.filter_by(public_id=id).first()
     def __repr__(self):
         return str(self.id) + ' - ' + str(self.user)
     def save(self):
@@ -36,8 +38,14 @@ class User(UserMixin, db.Model):
         return self
     def verify_password(self, password):
         return self.password == password
-    
-    
+    def get_by_username(self, username):
+        return User.query.filter_by(user=username).first()
+    def login(self, username, password):
+        user = User.query.filter_by(user=username).first()
+        if user and user.verify_password(password):
+            return user.to_json()
+        return None
+
 
 class List(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -47,6 +55,8 @@ class List(db.Model):
     card = db.relationship('Card', backref='List', lazy=True)
     def __repr__(self):
         return str(self.name) +" "+str(self.card)
+    
+    
 class Card(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     Title = db.Column(db.String(64),unique=True,nullable=False)
