@@ -27,6 +27,8 @@ Install with pip:
 ```
 $ git clone "repo"
 $ cd kanban
+$ virtualenv venv
+$ venv/Scripts/activate
 $ pip install -r requirements.txt
 $ flask run
 ```
