@@ -38,7 +38,7 @@ from app import app
 from app.models import *
 
 def token_required(f):
-    (f)
+    wraps(f)
     def decorated(*args, **kwargs):
         token = None
         if "Authorization" in request.headers:
@@ -52,7 +52,6 @@ def token_required(f):
         try:
             data=jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
             current_user = User.query.filter_by(id=data['id']).first()
-            app.logger.error(current_user.id)
             if current_user.id != data['id']:
                 return {
                 "message": "Invalid Authentication token!",

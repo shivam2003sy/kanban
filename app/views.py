@@ -13,8 +13,10 @@ from app.models import User, List, Card
 from app.forms import LoginForm, RegisterForm
 # provide login manager with load_user callback
 
-
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
 @lm.user_loader
 def load_user(user_id):
@@ -271,7 +273,7 @@ def summary():
         list_item = user.list
         card_dict ={}
         for list in list_item:
-            graphs_of_list(list.id)
+            # graphs_of_list(list.id)
             card_dict[list.id] = []
             completed =0
             fail = 0
@@ -289,26 +291,62 @@ def summary():
             card_dict[list.id].append(fail)
             card_dict[list.id].append(going)
             card_dict[list.id].append(total)
+        for x in card_dict:
+            paichart(card_dict[x],x)
+        generate_line_graph(log_id)
         return render_template('summary/main.html', list=list_item , card_dict=card_dict)
+def paichart(x,id):
+    x=x[:len(x)-1]
+    y = np.array(x)
+    mylabels = ["completed", "failed to complete", "going-on"]
+    plt.pie(y, labels = mylabels , shadow=True, startangle=90)
+    txt = "app/static/piechart{}.png"
+    plt.savefig(txt.format(id))
+    plt.clf()
+
+
+def generate_line_graph(current_user):
+    user = User.query.filter_by(id=current_user).first_or_404()
+    list_item = user.list
+    card_dict =[]
+    time=[]
+    for list in list_item:
+        card=Card.query.filter_by(list_id=list.id ,Completed=1).all()
+        card_dict.append(card)
+    for x in card_dict:
+        for y in x:
+            y.complete_time = y.complete_time.strftime("%Y-%m-%d")
+            time.append(y.complete_time)
+    today = datetime.datetime.now()
+    dates = [today + datetime.timedelta(days=i) for i in range(0 - today.weekday(), 7 - today.weekday())]
+    date_string=[]
+    for x in dates:
+        x = x.strftime("%Y-%m-%d")
+        date_string.append(x)
+    count_date=[]
+    for x in date_string:
+        count=0
+        for y in time:
+            if x == y:
+                count +=1
+        count_date.append(count)
+    app.logger.info(count_date)
+    app.logger.info(date_string)
+    fig = plt.figure(figsize = (10, 5))
+    plt.bar(date_string,count_date, color ='green', width = 0.4)
+    plt.xlabel("Date")
+    plt.ylabel("No. OF Completed Task")
+    plt.title("Weekly Completed Task")
+    plt.savefig("app/static/linegraph.png")
+    plt.clf()
 
 
 
-def graphs_of_list(list_id):
-    cards = Card.query.filter_by(list_id=list_id).all()
-    x = []
-    y = []
-    for card in cards:
-        if card.Completed :
-            date_time = card.complete_time.strftime("%m/%d/%Y")
-            x.append(date_time)
-            i = Card.query.filter_by(complete_time=date_time ,Completed=True).all()
-            y.append(len(i))
-            app.logger.info(x)
-            app.logger.info(y)
-    # creating the bar plot
-    plt.bar(x,y, color ='maroon',
-            width = 0.4)
-    plt.xlabel("Dates")
-    plt.ylabel("No. of tasks completed")
-    plt.title("Tasks completed")
-    plt.show()
+
+
+
+
+
+    
+
+

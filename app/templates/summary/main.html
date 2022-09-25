@@ -20,14 +20,16 @@
                         <p class="card-text text-danger"> {{card_dict[item.id][1]}}</p>
                         <h6>In progress</h6>
                         <p class="card-text"> {{card_dict[item.id][2]}}</p>
+                        <img class="card-img-top" src="{{url_for('static', filename='piechart'+item.id|string+'.png')}}" alt="image"/>
                     </div>
                 </div>
         </div>
         {% endfor %}
-        {{total_cards}}
+        <img class="card-img-top" src="{{url_for('static', filename='linegraph.png')}}" alt="image"/>
     </div>
     </div>
+<script>
+</script>
 </section>
-
 
 {% endblock content %}

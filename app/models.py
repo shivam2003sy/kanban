@@ -40,6 +40,8 @@ class User(UserMixin, db.Model):
         return self.password == password
     def get_by_username(self, username):
         return User.query.filter_by(user=username).first()
+    def get_by_id ( self ,  id ) :
+            return   User.query.filter_by( public_id = id ).first ( )
     def login(self, username, password):
         user = User.query.filter_by(user=username).first()
         if user and user.verify_password(password):
@@ -55,8 +57,23 @@ class List(db.Model):
     card = db.relationship('Card', backref='List', lazy=True)
     def __repr__(self):
         return str(self.name) +" "+str(self.card)
-    
-    
+    def to_json(self):
+        json_list = {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+        }
+        return json_list
+    def save(self):
+        # inject self into db session    
+        db.session.add( self )
+        # commit change and save the object
+        db.session.commit()
+        return self
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
 class Card(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     Title = db.Column(db.String(64),unique=True,nullable=False)
@@ -69,4 +86,26 @@ class Card(db.Model):
     last_update = db.Column(db.DateTime)
     def __repr__(self):
         return '<Card %r>' % self.Title
-
+    def to_json(self):
+        json_card = {
+            'Title': self.Title,
+            'id': self.id,
+            'Content': self.Content,
+            'deadline': self.deadline,
+            'list_id': self.list_id,
+            'Completed': self.Completed,
+            'create_time': self.create_time,
+            'complete_time': self.complete_time,
+            'last_update': self.last_update
+        }
+        return json_card
+    def save(self):
+        # inject self into db session    
+        db.session.add( self )
+        # commit change and save the object
+        db.session.commit()
+        return self
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return self
